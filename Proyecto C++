@@ -1,0 +1,91 @@
+#include <iostream>
+#include <iomanip>
+#include <ctime>
+
+using namespace std;
+
+int buscar(string name);
+
+void Administrador(); //Prototipos
+void Altas();
+void Bajas();
+void Consultas();
+void Modificaciones();
+void Inventario();
+void Usuarios();
+
+int main(){
+    do {
+        cout << "Menú\n";
+        cout << "1. Administrador\n";
+        cout << "2. Ventas\n";
+        cout << "3. Salir\n";
+        cout << "Opción: ";
+        cin>>opc;
+        switch (opc){
+        case 1: Administrador();
+        case 2:
+        case 3:
+        default: cout << "Opción inválida\n";
+        }
+     } while (opc != 3);
+return0;
+}
+
+void Administrador() {
+int opc;
+    do {
+        cout << "Menú Administrador\n";
+        cout << "1. Altas\n";
+        cout << "2. Bajas\n";
+        cout << "3. Consultas\n";
+        cout << "4. Modificaciones\n";
+        cout << "5. Mostrar inventario\n";
+        cout << "6. Administración de Usuarios\n";
+        cout << "7. Regresar\n";
+        cout << "Opción: ";
+        cin>>opc;
+        switch (opc) {
+            case 1: Altas();
+                break;
+            case 2: Bajas();
+                break;
+            case 3: Consultas();
+                break;
+            case 4: Modificaciones();
+                break;
+            case 5: Inventario();
+                break;
+            case 6: Usuarios();
+                break;
+            case 7:
+                break;
+            default: cout << "Opción Inválida\n";
+        }
+    } while (opc != 7);
+}
+
+void Altas() {
+
+}
+
+void Bajas() {
+
+}
+
+void Consultas() {
+
+}
+
+void Modificaciones(){
+
+}
+
+void Inventario() {
+
+}
+
+void Usuarios(){
+
+}
+
