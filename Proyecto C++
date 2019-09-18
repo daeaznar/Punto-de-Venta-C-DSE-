@@ -29,7 +29,7 @@ int main(){
         default: cout << "Opción inválida\n";
         }
      } while (opc != 3);
-return0;
+return 0;
 }
 
 void Administrador() {
