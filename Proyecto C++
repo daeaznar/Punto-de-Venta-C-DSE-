@@ -4,6 +4,24 @@
 
 using namespace std;
 
+struct inventario {
+    int id;
+    string producto;
+    int pc;
+    int pv;
+    int existencia;
+    int nr;
+    int st;
+    inventario *ant;
+    inventario *sig;
+};
+
+inventario *ptr = NULL;
+inventario *inicio = NULL;
+inventario *fin = NULL;
+inventario *nuevo = NULL;
+
+
 int buscar(string name);
 
 void Administrador(); //Prototipos
@@ -14,7 +32,8 @@ void Modificaciones();
 void Inventario();
 void Usuarios();
 
-int main(){
+int main() {
+    int opc;
     do {
         cout << "Menú\n";
         cout << "1. Administrador\n";
@@ -22,18 +41,18 @@ int main(){
         cout << "3. Salir\n";
         cout << "Opción: ";
         cin>>opc;
-        switch (opc){
-        case 1: Administrador();
-        case 2:
-        case 3:
-        default: cout << "Opción inválida\n";
+        switch (opc) {
+            case 1: Administrador();
+            case 2:
+            case 3: cout << "Cerrando Sistema\n";
+            default: cout << "Opción inválida\n";
         }
-     } while (opc != 3);
-return 0;
+    } while (opc != 3);
+    return 0;
 }
 
 void Administrador() {
-int opc;
+    int opc;
     do {
         cout << "Menú Administrador\n";
         cout << "1. Altas\n";
@@ -66,7 +85,52 @@ int opc;
 }
 
 void Altas() {
-
+    string prod;
+    int pc_t;
+    int pv_t;
+    int existencia_t;
+    int nr_t;
+    while (true) {
+        cout << "Ingrese Producto: ";
+        cin >> prod;
+        if (prod == "*")
+            break;
+        else {
+            do {
+                cout << "Ingrese Precio de Compra: ";
+                cin >> pc_t;
+                cout << "Ingrese Precio de Venta: ";
+                cin >> pv_t;
+                if (pv_t <= pc_t)
+                    cout << "El precio de Venta debe ser mayor al precio de Compra\n";
+            } while (pv_t <= pc_t);
+            do {
+                cout << "Ingrese cantidad en existencia: ";
+                cin >> existencia_t;
+                cout << "Ingrese nivel de Reorden: ";
+                cin >> nr_t;
+                if (existencia_t <= nr_t)
+                    cout << "La existencia debe ser mayor al Nivel de Reorden\n";
+            } while (existencia_t <= nr_t);
+            nuevo = new(inventario);
+            nuevo->producto = prod;
+            nuevo->pc = pc_t;
+            nuevo->pv = pv_t;
+            nuevo->existencia = existencia_t;
+            nuevo->nr = nr_t;
+            nuevo->st = 1;
+            if (inicio == NULL)
+                inicio = nuevo;
+            else {
+                nuevo->ant = fin;
+                fin->sig = nuevo;
+            }
+            fin = nuevo;
+            cout << "El producto ha sido dado de alta exitosamente\n";
+            /*cout << nuevo->producto <<" "<< nuevo->pc<<" " << nuevo->pv<<" " << nuevo->existencia<<" ";
+            cout<<nuevo->nr<<" " << nuevo->st;*/
+        }
+    }
 }
 
 void Bajas() {
@@ -77,15 +141,46 @@ void Consultas() {
 
 }
 
-void Modificaciones(){
+void Modificaciones() {
 
 }
 
 void Inventario() {
+    int opc;
+    ptr = inicio;
+    cout << "Inventario\n";
+    do {
+        cout << "Mostrar inventario por:\n";
+        cout << "1. ID\n" << "2. Producto\n";
+        cin>>opc;
+        switch (opc) {
+            case 1:
+            {
+
+            }
+                break;
+            case 2:
+            {
+                cout << setw(6) << "ID" << setw(12) << "Producto" << setw(6) << "PC" << setw(6) << "PV";
+                cout << setw(14) << "Existencia" << setw(6) << "NR" << endl;
+                while (true) {
+                    cout << ptr->producto << " " << ptr->pc << " " << ptr->pv << " ";
+                    cout << ptr->existencia << " " << ptr->nr << endl;
+                    if (ptr->sig == NULL)
+                        break;
+                    else
+                        ptr = ptr->sig;
+                }
+            }
+                break;
+            default: cout << "Opción Inválida\n";
+        }
+    } while (opc != 1 && 2);
 
 }
 
-void Usuarios(){
+void Usuarios() {
 
 }
+
 
