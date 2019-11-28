@@ -11,7 +11,6 @@ struct inventario {
     int pv;
     int existencia;
     int nr;
-    int st;
     inventario *ant;
     inventario *sig;
 };
@@ -32,6 +31,8 @@ void Modificaciones();
 void Inventario();
 void Usuarios();
 
+int total = 0;
+
 int main() {
     int opc;
     do {
@@ -41,10 +42,14 @@ int main() {
         cout << "3. Salir\n";
         cout << "Opción: ";
         cin>>opc;
+        cout<<endl;
         switch (opc) {
             case 1: Administrador();
+                break;
             case 2:
+                break;
             case 3: cout << "Cerrando Sistema\n";
+                break;
             default: cout << "Opción inválida\n";
         }
     } while (opc != 3);
@@ -64,6 +69,7 @@ void Administrador() {
         cout << "7. Regresar\n";
         cout << "Opción: ";
         cin>>opc;
+        cout << endl;
         switch (opc) {
             case 1: Altas();
                 break;
@@ -114,11 +120,12 @@ void Altas() {
             } while (existencia_t <= nr_t);
             nuevo = new(inventario);
             nuevo->producto = prod;
+            nuevo->id = total + 1;
             nuevo->pc = pc_t;
             nuevo->pv = pv_t;
             nuevo->existencia = existencia_t;
             nuevo->nr = nr_t;
-            nuevo->st = 1;
+            total += 1;
             if (inicio == NULL)
                 inicio = nuevo;
             else {
@@ -147,36 +154,52 @@ void Modificaciones() {
 
 void Inventario() {
     int opc;
+    string salir;
     ptr = inicio;
     cout << "Inventario\n";
-    do {
-        cout << "Mostrar inventario por:\n";
-        cout << "1. ID\n" << "2. Producto\n";
-        cin>>opc;
-        switch (opc) {
-            case 1:
-            {
+    if (inicio == NULL)
+        cout << "***No hay ningún producto registrado***\n" << endl;
+    else {
+        do {
+            cout << "Mostrar inventario por:\n";
+            cout << "1. ID\n" << "2. Producto\n";
+            cin>>opc;
+            switch (opc) {
+                case 1:
+                {
 
-            }
-                break;
-            case 2:
-            {
-                cout << setw(6) << "ID" << setw(12) << "Producto" << setw(6) << "PC" << setw(6) << "PV";
-                cout << setw(14) << "Existencia" << setw(6) << "NR" << endl;
-                while (true) {
-                    cout << ptr->producto << " " << ptr->pc << " " << ptr->pv << " ";
-                    cout << ptr->existencia << " " << ptr->nr << endl;
-                    if (ptr->sig == NULL)
-                        break;
-                    else
-                        ptr = ptr->sig;
                 }
+                    while (true) {
+                        cout << "Presione ''*'' para salir\n";
+                        cin>>salir;
+                        if (salir == "*")
+                            break;
+                    }
+                    break;
+                case 2:
+                {
+                    cout << setw(6) << "ID" << setw(12) << "Producto" << setw(6) << "PC" << setw(6) << "PV";
+                    cout << setw(14) << "Existencia" << setw(6) << "NR" << endl;
+                    while (true) {
+                        cout << setw(5) << ptr->id << setw(12) << ptr->producto << setw(7) << ptr->pc;
+                        cout << setw(6) << ptr->pv << setw(9) << ptr->existencia << setw(11) << ptr->nr << endl;
+                        if (ptr->sig == NULL)
+                            break;
+                        else
+                            ptr = ptr->sig;
+                    }
+                }
+                    while (true) {
+                        cout << "Presione ''*'' para salir\n";
+                        cin>>salir;
+                        if (salir == "*")
+                            break;
+                    }
+                    break;
+                default: cout << "Opción Inválida\n";
             }
-                break;
-            default: cout << "Opción Inválida\n";
-        }
-    } while (opc != 1 && 2);
-
+        } while (opc > 2);
+    }
 }
 
 void Usuarios() {
