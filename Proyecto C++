@@ -1,12 +1,15 @@
 #include <iostream>
 #include <iomanip>
 #include <ctime>
+#include <fstream>
+#include <cstring>
+#include <string>
 
 using namespace std;
 
 struct inventario {
     int id;
-    string producto;
+    char producto[40];
     int pc;
     int pv;
     int existencia;
@@ -23,6 +26,8 @@ inventario *nuevo = NULL;
 
 int buscar(string name);
 
+void Lectura_prod();
+
 void Administrador(); //Prototipos
 void Altas();
 void Bajas();
@@ -34,6 +39,7 @@ void Usuarios();
 int total = 0;
 
 int main() {
+    Lectura_prod();
     int opc;
     do {
         cout << "Menú\n";
@@ -42,7 +48,7 @@ int main() {
         cout << "3. Salir\n";
         cout << "Opción: ";
         cin>>opc;
-        cout<<endl;
+        cout << endl;
         switch (opc) {
             case 1: Administrador();
                 break;
@@ -54,6 +60,71 @@ int main() {
         }
     } while (opc != 3);
     return 0;
+}
+
+void Lectura_prod() {
+    fstream archivo("productos.bin", ios::in | ios::binary);
+    char prod[40];
+    int id_t, pc_t, pv_t, existencia_t, nr_t;
+    int i = 0;
+    if (!archivo) cout << "***Error en la apertura del archivo***" << endl;
+    else {
+        cout << setw(6) << "ID" << setw(12) << "Producto" << setw(6) << "PC" << setw(6) << "PV";
+        cout << setw(14) << "Existencia" << setw(6) << "NR" << endl;
+        // lectura adelantada
+        archivo.read(prod, 40);
+        archivo.read(reinterpret_cast<char *> (&id_t), sizeof (id_t));
+        archivo.read(reinterpret_cast<char *> (&pc_t), sizeof (pc_t));
+        archivo.read(reinterpret_cast<char *> (&pv_t), sizeof (pv_t));
+        archivo.read(reinterpret_cast<char *> (&existencia_t), sizeof (existencia_t));
+        archivo.read(reinterpret_cast<char *> (&nr_t), sizeof (nr_t));
+
+        nuevo = new(inventario); //Iniciando lista (directamente, sin arreglo de estructuras))
+        total += 1;
+        nuevo->id = total;
+        strcpy(nuevo->producto, prod);
+        nuevo->pc = pc_t;
+        nuevo->pv = pv_t;
+        nuevo->existencia = existencia_t;
+        nuevo->nr = nr_t;
+        nuevo->ant = NULL;
+        nuevo->sig = NULL;
+        inicio = nuevo;
+        fin = nuevo;
+        i++;
+        cout << i << endl;
+        while (archivo.eof() == false) {
+            cout << setw(5) << nuevo->id << setw(12) << nuevo->producto << setw(7) << nuevo->pc;
+            cout << setw(6) << nuevo->pv << setw(9) << nuevo->existencia << setw(11) << nuevo->nr << endl;
+            // lectura del siguiente registro
+            archivo.read(reinterpret_cast<char *> (&prod), sizeof (prod));
+            archivo.read(reinterpret_cast<char *> (&id_t), sizeof (id_t));
+            archivo.read(reinterpret_cast<char *> (&pc_t), sizeof (pc_t));
+            archivo.read(reinterpret_cast<char *> (&pv_t), sizeof (pv_t));
+            archivo.read(reinterpret_cast<char *> (&existencia_t), sizeof (existencia_t));
+            archivo.read(reinterpret_cast<char *> (&nr_t), sizeof (nr_t));
+            nuevo = new(inventario);
+            total += 1;
+            strcpy(nuevo->producto, prod);
+            nuevo->id = total;
+            nuevo->pc = pc_t;
+            nuevo->pv = pv_t;
+            nuevo->existencia = existencia_t;
+            nuevo->nr = nr_t;
+            fin->sig = nuevo;
+            nuevo->ant = fin;
+            nuevo->sig = NULL;
+            fin = nuevo;
+            i++;
+            cout << i << endl;
+        }
+        archivo.close();
+        ptr = inicio;
+        while (ptr != NULL) {
+            cout << ptr->producto << endl;
+            ptr = ptr->sig;
+        }
+    }
 }
 
 void Administrador() {
@@ -90,18 +161,30 @@ void Administrador() {
     } while (opc != 7);
 }
 
+int buscar(string name) {
+    int i = 0;
+    ptr = inicio;
+    while (i < total && ptr->producto != name) {
+        i++;
+        ptr = ptr->sig;
+    }
+    if (i == total)
+        return-1;
+    else
+        return i;
+}
+
 void Altas() {
     string prod;
-    int pc_t;
-    int pv_t;
-    int existencia_t;
-    int nr_t;
+    int pos;
+    int pc_t, pv_t, existencia_t, nr_t;
     while (true) {
         cout << "Ingrese Producto: ";
         cin >> prod;
         if (prod == "*")
             break;
-        else {
+        pos = buscar(prod);
+        if (pos == -1) {
             do {
                 cout << "Ingrese Precio de Compra: ";
                 cin >> pc_t;
@@ -119,7 +202,7 @@ void Altas() {
                     cout << "La existencia debe ser mayor al Nivel de Reorden\n";
             } while (existencia_t <= nr_t);
             nuevo = new(inventario);
-            nuevo->producto = prod;
+            strcpy(nuevo->producto, prod.c_str());
             nuevo->id = total + 1;
             nuevo->pc = pc_t;
             nuevo->pv = pv_t;
@@ -133,23 +216,255 @@ void Altas() {
                 fin->sig = nuevo;
             }
             fin = nuevo;
-            cout << "El producto ha sido dado de alta exitosamente\n";
-            /*cout << nuevo->producto <<" "<< nuevo->pc<<" " << nuevo->pv<<" " << nuevo->existencia<<" ";
-            cout<<nuevo->nr<<" " << nuevo->st;*/
-        }
+            cout << "*El producto ha sido dado de alta exitosamente*\n" << endl;
+        } else
+            cout << "El producto " << prod << " ya está dado de alta\n" << endl;
     }
 }
 
 void Bajas() {
+    int i;
+    int pos;
+    int opc;
+    string prod;
+    cout << "Bajas\n";
+    if (inicio == NULL)
+        cout << "***No hay ningún producto registrado***" << endl;
+    else {
+        while (true) {
+            cout << "Ingrese producto: ";
+            cin>>prod;
+            if (prod == "*")
+                break;
+            pos = buscar(prod);
+            if (pos == -1)
+                cout << "El producto: " << prod << ", no existe\n";
+            else {
+                while (true) {
+                    cout << "¿Seguro que desea dar de baja el producto: " << prod << "?\n";
+                    cout << "1. Sí\n";
+                    cout << "2. No\n";
+                    cin >> opc;
+                    switch (opc) {
+                        case 1:
+                        {
+                            total -= 1;
+                            ptr = inicio;
+                            i = 0;
+                            while (i != pos) {
+                                ptr = ptr->sig;
+                                i++;
+                            }
+                            if (inicio == fin) { //Si solo hay un nodo en la lista
+                                delete(inicio);
+                                inicio == NULL;
+                                fin == NULL;
+                                ptr == NULL;
+                            } else {
+                                if (ptr == inicio) { //Hay varios nodos, solo el 1° se borra
+                                    delete(inicio);
+                                    inicio = inicio->sig;
+                                    inicio->ant = NULL;
+                                } else {
+                                    if (ptr == fin) { //Hay varios nodos, solo el último se borra
+                                        delete(fin);
+                                        fin = fin->ant;
+                                        fin->sig = NULL;
+                                    } else { //Varios nodos, borrar X elemento de la lista
+                                        delete(ptr);
+                                        ptr->ant->sig = ptr->sig;
+                                        ptr->sig->ant = ptr->ant;
+                                    }
+                                }
 
+                            }
+
+                            cout << "*El producto ha sido dado de baja exitosamente*\n" << endl;
+                        }
+                            break;
+                        case 2:
+                            break;
+                        default: cout << "Opción Inválida\n";
+                    }
+                    if (opc < 3)
+                        break;
+                }
+            }
+        }
+    }
 }
 
 void Consultas() {
-
+    int pos;
+    int opc;
+    string prod;
+    int pc_t, pv_t, existencia_t, nr_t;
+    cout << "Consultas\n";
+    if (inicio == NULL)
+        cout << "***No hay ningún producto registrado***" << endl;
+    else {
+        while (true) {
+            cout << "Ingrese producto: ";
+            cin>>prod;
+            if (prod == "*")
+                break;
+            pos = buscar(prod);
+            if (pos == -1) {
+                while (true) {
+                    cout << "El producto " << prod << " no existe. ¿Desea darlo de Alta?\n";
+                    cout << "1. Sí\n" << "2. No\n";
+                    cin >> opc;
+                    switch (opc) {
+                        case 1:
+                        {
+                            do {
+                                cout << "Ingrese Precio de Compra: ";
+                                cin >> pc_t;
+                                cout << "Ingrese Precio de Venta: ";
+                                cin >> pv_t;
+                                if (pv_t <= pc_t)
+                                    cout << "El precio de Venta debe ser mayor al precio de Compra\n";
+                            } while (pv_t <= pc_t);
+                            do {
+                                cout << "Ingrese cantidad en existencia: ";
+                                cin >> existencia_t;
+                                cout << "Ingrese nivel de Reorden: ";
+                                cin >> nr_t;
+                                if (existencia_t <= nr_t)
+                                    cout << "La existencia debe ser mayor al Nivel de Reorden\n";
+                            } while (existencia_t <= nr_t);
+                            nuevo = new(inventario);
+                            strcpy(nuevo->producto, prod.c_str());
+                            nuevo->id = total + 1;
+                            nuevo->pc = pc_t;
+                            nuevo->pv = pv_t;
+                            nuevo->existencia = existencia_t;
+                            nuevo->nr = nr_t;
+                            total += 1;
+                            if (inicio == NULL)
+                                inicio = nuevo;
+                            else {
+                                nuevo->ant = fin;
+                                fin->sig = nuevo;
+                            }
+                            fin = nuevo;
+                        }
+                            break;
+                        case 2:
+                            break;
+                        default: cout << "Opción Inválida\n";
+                    }
+                    if (opc < 3)
+                        break;
+                }
+            } else {
+                cout << "Resultados del producto: " << ptr->producto << endl;
+                cout << endl;
+                cout << setw(6) << "ID" << setw(12) << "Producto" << setw(6) << "PC" << setw(6) << "PV";
+                cout << setw(14) << "Existencia" << setw(6) << "NR" << endl;
+                cout << setw(5) << ptr->id << setw(12) << ptr->producto << setw(7) << ptr->pc;
+                cout << setw(6) << ptr->pv << setw(9) << ptr->existencia << setw(11) << ptr->nr;
+                if (ptr->existencia <= ptr->nr)
+                    cout << "*" << endl;
+                else
+                    cout << endl;
+            }
+        }
+    }
 }
 
 void Modificaciones() {
-
+    int opc;
+    int pos;
+    string nombre;
+    cout << "Modificaciones\n";
+    if (inicio == NULL)
+        cout << "***No hay ningún producto registrado***" << endl;
+    else {
+        while (true) {
+            cout << "Ingrese producto a Modificar: ";
+            cin>>nombre;
+            if (nombre == "*")
+                break;
+            pos = buscar(nombre);
+            if (pos == -1)
+                cout << "El producto: " << nombre << ", no existe\n";
+            else {
+                while (true) {
+                    cout << "Qué desea Modificar?\n";
+                    cout << "1. Precio de Compra\n";
+                    cout << "2. Precio de Venta\n";
+                    cout << "3. Existencia\n";
+                    cout << "4. Nivel de Reorden\n";
+                    cout << "5. TODO\n";
+                    cout << "6. Regresar\n";
+                    cin>>opc;
+                    switch (opc) {
+                        case 1:
+                        {
+                            cout << "El Precio de Compra actual es de: " << ptr->pc << endl;
+                            cout << "Ingrese el nuevo Precio de Compra: ";
+                            cin >> ptr->pc;
+                            cout << "El Precio de Compra ha sido Modificado\n"<<endl;
+                        }
+                            break;
+                        case 2:
+                        {
+                            cout << "El Precio de Venta actual es de: " << ptr->pv << endl;
+                            cout << "Ingrese el nuevo Precio de Venta: ";
+                            cin >> ptr->pv;
+                            cout << "El Precio de Venta ha sido Modificado\n"<<endl;
+                        }
+                            break;
+                        case 3:
+                        {
+                            cout << "La Existencia actual es de: " << ptr->existencia << endl;
+                            cout << "Ingrese la nueva Existencia: ";
+                            cin >> ptr->existencia;
+                            cout << "La Existencia ha sido Modificada\n"<<endl;
+                        }
+                            break;
+                        case 4:
+                        {
+                            cout << "El Nivel de Reorden actual es de: " << ptr->nr << endl;
+                            cout << "Ingrese el nuevo Nivel de Reorden: ";
+                            cin >> ptr->nr;
+                            cout << "El Nivel de Reorden ha sido Modificado\n"<<endl;
+                        }
+                            break;
+                        case 5:
+                        {
+                            cout << "Datos actuales:\n";
+                            cout << setw(6) << "ID" << setw(12) << "Producto" << setw(6) << "PC" << setw(6) << "PV";
+                            cout << setw(14) << "Existencia" << setw(6) << "NR" << endl;
+                            cout << setw(5) << ptr->id << setw(12) << ptr->producto << setw(7) << ptr->pc;
+                            cout << setw(6) << ptr->pv << setw(9) << ptr->existencia << setw(11) << ptr->nr;
+                            if (ptr->existencia <= ptr->nr)
+                                cout << "*" << endl;
+                            else
+                                cout << endl;
+                            cout << "Ingrese los nuevos datos:\n";
+                            cout << "Precio de compra: ";
+                            cin >> ptr->pc;
+                            cout << "Precio de Venta: ";
+                            cin >> ptr->pv;
+                            cout << "Existencia: ";
+                            cin >> ptr->existencia;
+                            cout << "Nivel de Reorden: ";
+                            cin >> ptr->nr;
+                            cout << "*Los datos han sido Modificados*\n"<<endl;
+                        }
+                            break;
+                        case 6:
+                            break;
+                        default: cout << "Opción Inválida\n";
+                    }
+                    if (opc == 6)
+                        break;
+                }
+            }
+        }
+    }
 }
 
 void Inventario() {
@@ -158,7 +473,7 @@ void Inventario() {
     ptr = inicio;
     cout << "Inventario\n";
     if (inicio == NULL)
-        cout << "***No hay ningún producto registrado***\n" << endl;
+        cout << "***No hay ningún producto registrado***" << endl;
     else {
         do {
             cout << "Mostrar inventario por:\n";
@@ -182,7 +497,11 @@ void Inventario() {
                     cout << setw(14) << "Existencia" << setw(6) << "NR" << endl;
                     while (true) {
                         cout << setw(5) << ptr->id << setw(12) << ptr->producto << setw(7) << ptr->pc;
-                        cout << setw(6) << ptr->pv << setw(9) << ptr->existencia << setw(11) << ptr->nr << endl;
+                        cout << setw(6) << ptr->pv << setw(9) << ptr->existencia << setw(11) << ptr->nr;
+                        if (ptr->existencia <= ptr->nr)
+                            cout << "*" << endl;
+                        else
+                            cout << endl;
                         if (ptr->sig == NULL)
                             break;
                         else
