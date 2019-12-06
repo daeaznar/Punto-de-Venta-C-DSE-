@@ -23,6 +23,18 @@ inventario *inicio = NULL;
 inventario *fin = NULL;
 inventario *nuevo = NULL;
 
+struct user {
+    string usuario;
+    double pass;
+    string tipo;
+    user *ant;
+    user *sig;
+};
+
+user *nuevo_u = NULL;
+user *ptr_u = NULL;
+user *inicio_u = NULL;
+user *fin_u = NULL;
 
 int buscar(string name);
 
@@ -37,8 +49,42 @@ void Inventario();
 void Usuarios();
 
 int total = 0;
+int total_u = 0;
 
 int main() {
+    nuevo_u = new(user);
+    nuevo_u->usuario = "sofi";
+    nuevo_u->pass = 10;
+    nuevo_u->tipo = "Administrador";
+    nuevo_u->ant = NULL;
+    nuevo_u->sig = NULL;
+    inicio_u = nuevo_u;
+    fin_u = nuevo_u;
+    total_u += 1;
+    nuevo_u->usuario = "moni";
+    nuevo_u->pass = 20;
+    nuevo_u->tipo = "Administrador";
+    nuevo_u->ant = fin_u;
+    nuevo_u->sig = NULL;
+    fin_u->sig = nuevo_u;
+    fin_u = nuevo_u;
+    total_u += 1;
+    nuevo_u->usuario = "hoski";
+    nuevo_u->pass = 10;
+    nuevo_u->tipo = "vendedor";
+    nuevo_u->ant = fin_u;
+    nuevo_u->sig = NULL;
+    fin_u->sig = nuevo_u;
+    fin_u = nuevo_u;
+    total_u += 1;
+    nuevo_u->usuario = "Justin";
+    nuevo_u->pass = 20;
+    nuevo_u->tipo = "Vendedor";
+    nuevo_u->ant = fin_u;
+    nuevo_u->sig = NULL;
+    fin_u->sig = nuevo_u;
+    fin_u = nuevo_u;
+    total_u += 1;
     Lectura_prod();
     int opc;
     do {
@@ -81,7 +127,7 @@ void Lectura_prod() {
 
         nuevo = new(inventario); //Iniciando lista (directamente, sin arreglo de estructuras))
         total += 1;
-        nuevo->id = total;
+        nuevo->id = id_t;
         strcpy(nuevo->producto, prod);
         nuevo->pc = pc_t;
         nuevo->pv = pv_t;
@@ -106,7 +152,7 @@ void Lectura_prod() {
             nuevo = new(inventario);
             total += 1;
             strcpy(nuevo->producto, prod);
-            nuevo->id = total;
+            nuevo->id = id_t;
             nuevo->pc = pc_t;
             nuevo->pv = pv_t;
             nuevo->existencia = existencia_t;
@@ -119,46 +165,86 @@ void Lectura_prod() {
             cout << i << endl;
         }
         archivo.close();
+        delete (fin);
+        fin->ant->sig = NULL;
+        fin = fin->ant;
+        nuevo = NULL;
         ptr = inicio;
         while (ptr != NULL) {
-            cout << ptr->producto << endl;
+            cout << setw(5) << ptr->id << setw(12) << ptr->producto << setw(7) << ptr->pc;
+            cout << setw(6) << ptr->pv << setw(9) << ptr->existencia << setw(11) << ptr->nr << endl;
             ptr = ptr->sig;
         }
     }
 }
 
+int buscar_u(string name) {
+    int i = 0;
+    ptr_u = inicio_u;
+    while (i < total_u && ptr_u->usuario != name) {
+        i++;
+        ptr_u = ptr_u->sig;
+    }
+    if (i == total_u)
+        return-1;
+    else
+        return i;
+}
+
 void Administrador() {
     int opc;
-    do {
-        cout << "Menú Administrador\n";
-        cout << "1. Altas\n";
-        cout << "2. Bajas\n";
-        cout << "3. Consultas\n";
-        cout << "4. Modificaciones\n";
-        cout << "5. Mostrar inventario\n";
-        cout << "6. Administración de Usuarios\n";
-        cout << "7. Regresar\n";
-        cout << "Opción: ";
-        cin>>opc;
-        cout << endl;
-        switch (opc) {
-            case 1: Altas();
-                break;
-            case 2: Bajas();
-                break;
-            case 3: Consultas();
-                break;
-            case 4: Modificaciones();
-                break;
-            case 5: Inventario();
-                break;
-            case 6: Usuarios();
-                break;
-            case 7:
-                break;
-            default: cout << "Opción Inválida\n";
-        }
-    } while (opc != 7);
+    int pos;
+    string user_t;
+    double pass_t;
+    int i = 0;
+    while (i < 3) {
+        cout << "Ingrese nombre de usuario administrador: ";
+        cin>>user_t;
+        cout << "Ingresa contraseña: ";
+        cin>> pass_t;
+        pos = buscar_u(user_t);
+        if (pos == -1)
+            cout << "Usuario o contraseña incorrectos. Quedan: " << 2 - i << " intentos\n"<<endl;
+        else
+            if (pass_t != ptr_u->pass)
+            cout << "Usuario o contraseña incorrectos. Quedan: " << 2 - i << " intentos\n"<<endl;
+        else
+            if (pass_t == ptr_u->pass)
+            break;
+        i++;
+    }
+    if (pass_t == ptr_u->pass) {
+        do {
+            cout << "Menú Administrador\n";
+            cout << "1. Altas\n";
+            cout << "2. Bajas\n";
+            cout << "3. Consultas\n";
+            cout << "4. Modificaciones\n";
+            cout << "5. Mostrar inventario\n";
+            cout << "6. Administración de Usuarios\n";
+            cout << "7. Regresar\n";
+            cout << "Opción: ";
+            cin>>opc;
+            cout << endl;
+            switch (opc) {
+                case 1: Altas();
+                    break;
+                case 2: Bajas();
+                    break;
+                case 3: Consultas();
+                    break;
+                case 4: Modificaciones();
+                    break;
+                case 5: Inventario();
+                    break;
+                case 6: Usuarios();
+                    break;
+                case 7:
+                    break;
+                default: cout << "Opción Inválida\n";
+            }
+        } while (opc != 7);
+    }
 }
 
 int buscar(string name) {
@@ -203,17 +289,19 @@ void Altas() {
             } while (existencia_t <= nr_t);
             nuevo = new(inventario);
             strcpy(nuevo->producto, prod.c_str());
-            nuevo->id = total + 1;
             nuevo->pc = pc_t;
             nuevo->pv = pv_t;
             nuevo->existencia = existencia_t;
             nuevo->nr = nr_t;
             total += 1;
-            if (inicio == NULL)
+            if (inicio == NULL) {
+                nuevo->id = 1;
                 inicio = nuevo;
-            else {
+                fin = nuevo;
+            } else {
                 nuevo->ant = fin;
                 fin->sig = nuevo;
+                nuevo->id = nuevo->ant->id + 1;
             }
             fin = nuevo;
             cout << "*El producto ha sido dado de alta exitosamente*\n" << endl;
@@ -405,7 +493,7 @@ void Modificaciones() {
                             cout << "El Precio de Compra actual es de: " << ptr->pc << endl;
                             cout << "Ingrese el nuevo Precio de Compra: ";
                             cin >> ptr->pc;
-                            cout << "El Precio de Compra ha sido Modificado\n"<<endl;
+                            cout << "El Precio de Compra ha sido Modificado\n" << endl;
                         }
                             break;
                         case 2:
@@ -413,7 +501,7 @@ void Modificaciones() {
                             cout << "El Precio de Venta actual es de: " << ptr->pv << endl;
                             cout << "Ingrese el nuevo Precio de Venta: ";
                             cin >> ptr->pv;
-                            cout << "El Precio de Venta ha sido Modificado\n"<<endl;
+                            cout << "El Precio de Venta ha sido Modificado\n" << endl;
                         }
                             break;
                         case 3:
@@ -421,7 +509,7 @@ void Modificaciones() {
                             cout << "La Existencia actual es de: " << ptr->existencia << endl;
                             cout << "Ingrese la nueva Existencia: ";
                             cin >> ptr->existencia;
-                            cout << "La Existencia ha sido Modificada\n"<<endl;
+                            cout << "La Existencia ha sido Modificada\n" << endl;
                         }
                             break;
                         case 4:
@@ -429,7 +517,7 @@ void Modificaciones() {
                             cout << "El Nivel de Reorden actual es de: " << ptr->nr << endl;
                             cout << "Ingrese el nuevo Nivel de Reorden: ";
                             cin >> ptr->nr;
-                            cout << "El Nivel de Reorden ha sido Modificado\n"<<endl;
+                            cout << "El Nivel de Reorden ha sido Modificado\n" << endl;
                         }
                             break;
                         case 5:
@@ -452,7 +540,7 @@ void Modificaciones() {
                             cin >> ptr->existencia;
                             cout << "Nivel de Reorden: ";
                             cin >> ptr->nr;
-                            cout << "*Los datos han sido Modificados*\n"<<endl;
+                            cout << "*Los datos han sido Modificados*\n" << endl;
                         }
                             break;
                         case 6:
