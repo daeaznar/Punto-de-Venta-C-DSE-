@@ -39,6 +39,11 @@ user *fin_u = NULL;
 int buscar(string name);
 
 void Lectura_prod();
+void Lectura_users();
+
+void Verify_user();
+bool check_user;
+
 
 void Administrador(); //Prototipos
 void Altas();
@@ -48,43 +53,13 @@ void Modificaciones();
 void Inventario();
 void Usuarios();
 
+void Ventas();
+
 int total = 0;
 int total_u = 0;
 
 int main() {
-    nuevo_u = new(user);
-    nuevo_u->usuario = "sofi";
-    nuevo_u->pass = 10;
-    nuevo_u->tipo = "Administrador";
-    nuevo_u->ant = NULL;
-    nuevo_u->sig = NULL;
-    inicio_u = nuevo_u;
-    fin_u = nuevo_u;
-    total_u += 1;
-    nuevo_u->usuario = "moni";
-    nuevo_u->pass = 20;
-    nuevo_u->tipo = "Administrador";
-    nuevo_u->ant = fin_u;
-    nuevo_u->sig = NULL;
-    fin_u->sig = nuevo_u;
-    fin_u = nuevo_u;
-    total_u += 1;
-    nuevo_u->usuario = "hoski";
-    nuevo_u->pass = 10;
-    nuevo_u->tipo = "vendedor";
-    nuevo_u->ant = fin_u;
-    nuevo_u->sig = NULL;
-    fin_u->sig = nuevo_u;
-    fin_u = nuevo_u;
-    total_u += 1;
-    nuevo_u->usuario = "Justin";
-    nuevo_u->pass = 20;
-    nuevo_u->tipo = "Vendedor";
-    nuevo_u->ant = fin_u;
-    nuevo_u->sig = NULL;
-    fin_u->sig = nuevo_u;
-    fin_u = nuevo_u;
-    total_u += 1;
+    Lectura_users();
     Lectura_prod();
     int opc;
     do {
@@ -96,9 +71,31 @@ int main() {
         cin>>opc;
         cout << endl;
         switch (opc) {
-            case 1: Administrador();
+            case 1: Verify_user();
+            {
+                if (check_user == true) {
+                    if (ptr_u->tipo == "Administrador")
+                        Administrador();
+                    else
+                        cout << "El usuario ingresado no tiene privilegios de Administrador\n" << endl;
+                } else
+                    if (check_user == false)
+                    cout << "Ha excedido el límite de intentos\n";
                 break;
-            case 2:
+            }
+                break;
+            case 2:Verify_user();
+            {
+                if (check_user == true) {
+                    if (ptr_u->tipo == "Vendedor")
+                        Ventas();
+                    else
+                        cout << "El usuario ingresado no es Vendedor\n" << endl;
+                } else
+                    if (check_user == false)
+                    cout << "Ha excedido el límite de intentos\n";
+                break;
+            }
                 break;
             case 3: cout << "Cerrando Sistema\n";
                 break;
@@ -106,6 +103,85 @@ int main() {
         }
     } while (opc != 3);
     return 0;
+}
+
+void Lectura_users() {
+    nuevo_u = new(user);
+    nuevo_u->usuario = "sofi";
+    nuevo_u->pass = 10;
+    nuevo_u->tipo = "Administrador";
+    nuevo_u->ant = NULL;
+    nuevo_u->sig = NULL;
+    inicio_u = nuevo_u;
+    fin_u = nuevo_u;
+    total_u += 1;
+    nuevo_u = new(user);
+    nuevo_u->usuario = "moni";
+    nuevo_u->pass = 20;
+    nuevo_u->tipo = "Administrador";
+    nuevo_u->ant = fin_u;
+    nuevo_u->sig = NULL;
+    fin_u->sig = nuevo_u;
+    fin_u = nuevo_u;
+    total_u += 1;
+    nuevo_u = new(user);
+    nuevo_u->usuario = "hoski";
+    nuevo_u->pass = 10;
+    nuevo_u->tipo = "Vendedor";
+    nuevo_u->ant = fin_u;
+    nuevo_u->sig = NULL;
+    fin_u->sig = nuevo_u;
+    fin_u = nuevo_u;
+    total_u += 1;
+    nuevo_u = new(user);
+    nuevo_u->usuario = "justin";
+    nuevo_u->pass = 20;
+    nuevo_u->tipo = "Vendedor";
+    nuevo_u->ant = fin_u;
+    nuevo_u->sig = NULL;
+    fin_u->sig = nuevo_u;
+    fin_u = nuevo_u;
+    total_u += 1;
+    cout << total_u;
+}
+
+int buscar_u(string name) {
+    int i = 0;
+    ptr_u = inicio_u;
+    while (i < total_u && ptr_u->usuario != name) {
+        i++;
+        ptr_u = ptr_u->sig;
+    }
+    if (i == total_u)
+        return-1;
+    else
+        return i;
+}
+
+void Verify_user() {
+    string user_t;
+    int pos;
+    int pass_t;
+    int i;
+    i = 0;
+    while (i < 3) {
+        cout << "Ingrese nombre de usuario: ";
+        cin>>user_t;
+        cout << "Ingresa contraseña: ";
+        cin>> pass_t;
+        pos = buscar_u(user_t);
+        if (pos == -1)
+            cout << "Usuario o contraseña incorrectos. Quedan: " << 2 - i << " intentos\n";
+        else
+            if (pass_t == ptr_u->pass) {
+            check_user = true;
+            break;
+        } else
+            cout << "Usuario o contraseña incorrectos. Quedan: " << 2 - i << " intentos\n";
+        i++;
+    }
+    if (i > 2)
+        check_user = false;
 }
 
 void Lectura_prod() {
@@ -178,75 +254,6 @@ void Lectura_prod() {
     }
 }
 
-int buscar_u(string name) {
-    int i = 0;
-    ptr_u = inicio_u;
-    while (i < total_u && ptr_u->usuario != name) {
-        i++;
-        ptr_u = ptr_u->sig;
-    }
-    if (i == total_u)
-        return-1;
-    else
-        return i;
-}
-
-void Administrador() {
-    int opc;
-    int pos;
-    string user_t;
-    double pass_t;
-    int i = 0;
-    while (i < 3) {
-        cout << "Ingrese nombre de usuario administrador: ";
-        cin>>user_t;
-        cout << "Ingresa contraseña: ";
-        cin>> pass_t;
-        pos = buscar_u(user_t);
-        if (pos == -1)
-            cout << "Usuario o contraseña incorrectos. Quedan: " << 2 - i << " intentos\n"<<endl;
-        else
-            if (pass_t != ptr_u->pass)
-            cout << "Usuario o contraseña incorrectos. Quedan: " << 2 - i << " intentos\n"<<endl;
-        else
-            if (pass_t == ptr_u->pass)
-            break;
-        i++;
-    }
-    if (pass_t == ptr_u->pass) {
-        do {
-            cout << "Menú Administrador\n";
-            cout << "1. Altas\n";
-            cout << "2. Bajas\n";
-            cout << "3. Consultas\n";
-            cout << "4. Modificaciones\n";
-            cout << "5. Mostrar inventario\n";
-            cout << "6. Administración de Usuarios\n";
-            cout << "7. Regresar\n";
-            cout << "Opción: ";
-            cin>>opc;
-            cout << endl;
-            switch (opc) {
-                case 1: Altas();
-                    break;
-                case 2: Bajas();
-                    break;
-                case 3: Consultas();
-                    break;
-                case 4: Modificaciones();
-                    break;
-                case 5: Inventario();
-                    break;
-                case 6: Usuarios();
-                    break;
-                case 7:
-                    break;
-                default: cout << "Opción Inválida\n";
-            }
-        } while (opc != 7);
-    }
-}
-
 int buscar(string name) {
     int i = 0;
     ptr = inicio;
@@ -258,6 +265,42 @@ int buscar(string name) {
         return-1;
     else
         return i;
+}
+
+void Administrador() {
+    int opc;
+    int pos;
+    do {
+        cout << endl;
+        cout << "Menú Administrador\n";
+        cout << "1. Altas\n";
+        cout << "2. Bajas\n";
+        cout << "3. Consultas\n";
+        cout << "4. Modificaciones\n";
+        cout << "5. Mostrar inventario\n";
+        cout << "6. Administración de Usuarios\n";
+        cout << "7. Regresar\n";
+        cout << "Opción: ";
+        cin>>opc;
+        cout << endl;
+        switch (opc) {
+            case 1: Altas();
+                break;
+            case 2: Bajas();
+                break;
+            case 3: Consultas();
+                break;
+            case 4: Modificaciones();
+                break;
+            case 5: Inventario();
+                break;
+            case 6: Usuarios();
+                break;
+            case 7:
+                break;
+            default: cout << "Opción Inválida\n";
+        }
+    } while (opc != 7);
 }
 
 void Altas() {
@@ -556,6 +599,7 @@ void Modificaciones() {
 }
 
 void Inventario() {
+    inventario *aux = NULL;
     int opc;
     string salir;
     ptr = inicio;
@@ -581,6 +625,15 @@ void Inventario() {
                     break;
                 case 2:
                 {
+                 /*  ptr = inicio;
+                    aux = inicio;
+                    while (aux != NULL) {
+                        if (aux->producto > aux->sig->producto)
+                            swap(ptr, ptr->sig);
+                        aux = aux->sig;
+                        ptr=ptr->sig;
+
+                    }*/
                     cout << setw(6) << "ID" << setw(12) << "Producto" << setw(6) << "PC" << setw(6) << "PV";
                     cout << setw(14) << "Existencia" << setw(6) << "NR" << endl;
                     while (true) {
@@ -613,4 +666,7 @@ void Usuarios() {
 
 }
 
-
+void Ventas() {
+    cout << endl;
+    cout << "Menú Ventas\n";
+}
