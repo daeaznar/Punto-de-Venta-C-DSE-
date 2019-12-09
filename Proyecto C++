@@ -4,6 +4,8 @@
 #include <fstream>
 #include <cstring>
 #include <string>
+#include <algorithm>
+#include <utility>
 
 using namespace std;
 
@@ -24,9 +26,9 @@ inventario *fin = NULL;
 inventario *nuevo = NULL;
 
 struct user {
-    string usuario;
+    char usuario[40];
     double pass;
-    string tipo;
+    char tipo[40];
     user *ant;
     user *sig;
 };
@@ -51,7 +53,13 @@ void Bajas();
 void Consultas();
 void Modificaciones();
 void Inventario();
+
 void Usuarios();
+void Altas_u();
+void Bajas_u();
+void Consultas_u();
+void Modificaciones_u();
+void Mostrar_u();
 
 void Ventas();
 
@@ -61,6 +69,7 @@ int total_u = 0;
 int main() {
     Lectura_users();
     Lectura_prod();
+    string tipo_temp;
     int opc;
     do {
         cout << "Menú\n";
@@ -74,23 +83,25 @@ int main() {
             case 1: Verify_user();
             {
                 if (check_user == true) {
-                    if (ptr_u->tipo == "Administrador")
+                    tipo_temp = ptr_u->tipo;
+                    if (tipo_temp == "Administrador")
                         Administrador();
                     else
-                        cout << "El usuario ingresado no tiene privilegios de Administrador\n" << endl;
+                        cout << "*El usuario ingresado no tiene privilegios de Administrador*\n" << endl;
                 } else
                     if (check_user == false)
-                    cout << "Ha excedido el límite de intentos\n";
+                    cout << "***Ha excedido el límite de intentos***\n" << endl;
                 break;
             }
                 break;
             case 2:Verify_user();
             {
                 if (check_user == true) {
-                    if (ptr_u->tipo == "Vendedor")
+                    tipo_temp = ptr_u->tipo;
+                    if (tipo_temp == "Vendedor")
                         Ventas();
                     else
-                        cout << "El usuario ingresado no es Vendedor\n" << endl;
+                        cout << "*El usuario ingresado no es Vendedor*\n" << endl;
                 } else
                     if (check_user == false)
                     cout << "Ha excedido el límite de intentos\n";
@@ -106,43 +117,59 @@ int main() {
 }
 
 void Lectura_users() {
-    nuevo_u = new(user);
-    nuevo_u->usuario = "sofi";
-    nuevo_u->pass = 10;
-    nuevo_u->tipo = "Administrador";
-    nuevo_u->ant = NULL;
-    nuevo_u->sig = NULL;
-    inicio_u = nuevo_u;
-    fin_u = nuevo_u;
-    total_u += 1;
-    nuevo_u = new(user);
-    nuevo_u->usuario = "moni";
-    nuevo_u->pass = 20;
-    nuevo_u->tipo = "Administrador";
-    nuevo_u->ant = fin_u;
-    nuevo_u->sig = NULL;
-    fin_u->sig = nuevo_u;
-    fin_u = nuevo_u;
-    total_u += 1;
-    nuevo_u = new(user);
-    nuevo_u->usuario = "hoski";
-    nuevo_u->pass = 10;
-    nuevo_u->tipo = "Vendedor";
-    nuevo_u->ant = fin_u;
-    nuevo_u->sig = NULL;
-    fin_u->sig = nuevo_u;
-    fin_u = nuevo_u;
-    total_u += 1;
-    nuevo_u = new(user);
-    nuevo_u->usuario = "justin";
-    nuevo_u->pass = 20;
-    nuevo_u->tipo = "Vendedor";
-    nuevo_u->ant = fin_u;
-    nuevo_u->sig = NULL;
-    fin_u->sig = nuevo_u;
-    fin_u = nuevo_u;
-    total_u += 1;
-    cout << total_u;
+    fstream archivo_u("usuarios.bin", ios::in | ios::binary);
+    char user_t[40];
+    char tipo_t[40];
+    double pass_t;
+    int i = 0;
+    if (!archivo_u) cout << "Error en la apertura del archivo" << endl;
+    else {
+        cout << setw(6) << "Usuario" << setw(6) << "Pass" << setw(10) << "Tipo" << endl;
+        // lectura adelantada
+        archivo_u.read(user_t, 40);
+        archivo_u.read(reinterpret_cast<char *> (&pass_t), sizeof (pass_t));
+        archivo_u.read(tipo_t, 40);
+        nuevo_u = new(user); //Iniciando lista (directamente, sin arreglo de estructuras))
+        total_u += 1;
+        strcpy(nuevo_u->usuario, user_t);
+        nuevo_u->pass = pass_t;
+        strcpy(nuevo_u->tipo, tipo_t);
+        nuevo_u->ant = NULL;
+        nuevo_u->sig = NULL;
+        inicio_u = nuevo_u;
+        fin_u = nuevo_u;
+        i++;
+        cout << i << endl;
+        while (archivo_u.eof() == false) {
+            cout << setw(6) << nuevo_u->usuario << setw(6) << nuevo_u->pass << setw(15) << nuevo_u->tipo << endl;
+            // lectura del siguiente registro
+            archivo_u.read(user_t, 40);
+            archivo_u.read(reinterpret_cast<char *> (&pass_t), sizeof (pass_t));
+            archivo_u.read(tipo_t, 40);
+            nuevo_u = new(user);
+            total_u += 1;
+            strcpy(nuevo_u->usuario, user_t);
+            nuevo_u->pass = pass_t;
+            strcpy(nuevo_u->tipo, tipo_t);
+            fin_u->sig = nuevo_u;
+            nuevo_u->ant = fin_u;
+            nuevo_u->sig = NULL;
+            fin_u = nuevo_u;
+            i++;
+            cout << i << endl;
+        }
+        archivo_u.close();
+        delete(fin_u);
+        fin_u = fin_u->ant;
+        fin_u->sig = NULL;
+        total_u -= 1;
+        ptr_u = inicio_u;
+        while (ptr_u != NULL) {
+            cout << setw(6) << ptr_u->usuario << setw(6) << ptr_u->pass << setw(10) << ptr_u->tipo << endl;
+            ptr_u = ptr_u->sig;
+        }
+
+    }
 }
 
 int buscar_u(string name) {
@@ -171,13 +198,13 @@ void Verify_user() {
         cin>> pass_t;
         pos = buscar_u(user_t);
         if (pos == -1)
-            cout << "Usuario o contraseña incorrectos. Quedan: " << 2 - i << " intentos\n";
+            cout << "Usuario o contraseña incorrectos. Quedan: " << 2 - i << " intentos\n" << endl;
         else
             if (pass_t == ptr_u->pass) {
             check_user = true;
             break;
         } else
-            cout << "Usuario o contraseña incorrectos. Quedan: " << 2 - i << " intentos\n";
+            cout << "Usuario o contraseña incorrectos. Quedan: " << 2 - i << " intentos\n" << endl;
         i++;
     }
     if (i > 2)
@@ -214,10 +241,10 @@ void Lectura_prod() {
         inicio = nuevo;
         fin = nuevo;
         i++;
-        cout << i << endl;
         while (archivo.eof() == false) {
             cout << setw(5) << nuevo->id << setw(12) << nuevo->producto << setw(7) << nuevo->pc;
             cout << setw(6) << nuevo->pv << setw(9) << nuevo->existencia << setw(11) << nuevo->nr << endl;
+            cout << endl;
             // lectura del siguiente registro
             archivo.read(reinterpret_cast<char *> (&prod), sizeof (prod));
             archivo.read(reinterpret_cast<char *> (&id_t), sizeof (id_t));
@@ -238,13 +265,12 @@ void Lectura_prod() {
             nuevo->sig = NULL;
             fin = nuevo;
             i++;
-            cout << i << endl;
         }
         archivo.close();
-        delete (fin);
-        fin->ant->sig = NULL;
+        delete(fin);
         fin = fin->ant;
-        nuevo = NULL;
+        fin->sig = NULL;
+        total -= 1;
         ptr = inicio;
         while (ptr != NULL) {
             cout << setw(5) << ptr->id << setw(12) << ptr->producto << setw(7) << ptr->pc;
@@ -261,9 +287,9 @@ int buscar(string name) {
         i++;
         ptr = ptr->sig;
     }
-    if (i == total)
+    if (i == total) {
         return-1;
-    else
+    } else
         return i;
 }
 
@@ -341,12 +367,15 @@ void Altas() {
                 nuevo->id = 1;
                 inicio = nuevo;
                 fin = nuevo;
+                fin->sig = NULL;
+                fin->ant = NULL;
             } else {
                 nuevo->ant = fin;
                 fin->sig = nuevo;
                 nuevo->id = nuevo->ant->id + 1;
             }
             fin = nuevo;
+            fin->sig = NULL;
             cout << "*El producto ha sido dado de alta exitosamente*\n" << endl;
         } else
             cout << "El producto " << prod << " ya está dado de alta\n" << endl;
@@ -391,6 +420,7 @@ void Bajas() {
                                 inicio == NULL;
                                 fin == NULL;
                                 ptr == NULL;
+                                nuevo == NULL;
                             } else {
                                 if (ptr == inicio) { //Hay varios nodos, solo el 1° se borra
                                     delete(inicio);
@@ -409,7 +439,6 @@ void Bajas() {
                                 }
 
                             }
-
                             cout << "*El producto ha sido dado de baja exitosamente*\n" << endl;
                         }
                             break;
@@ -599,8 +628,10 @@ void Modificaciones() {
 }
 
 void Inventario() {
-    inventario *aux = NULL;
+    int i, j, k;
+    int id_temp, pc_temp, pv_temp, ex_temp, nr_temp;
     int opc;
+    string prod_temp;
     string salir;
     ptr = inicio;
     cout << "Inventario\n";
@@ -614,7 +645,64 @@ void Inventario() {
             switch (opc) {
                 case 1:
                 {
-
+                    k = total;
+                    ptr = inicio;
+                    for (i = 0; i < k - 1; i++)
+                        for (j = 0; j < (k - 1) - i; j++)
+                            if (ptr->id > ptr->sig->id) {
+                                id_temp = ptr->sig->id;
+                                ptr->sig->id = ptr->id;
+                                ptr->id = id_temp;
+                                prod_temp = ptr->sig->producto;
+                                strcpy(ptr->sig->producto, ptr->producto);
+                                strcpy(ptr->producto, prod_temp.c_str());
+                                pc_temp = ptr->sig->pc;
+                                ptr->sig->pc = ptr->pc;
+                                ptr->pc = pc_temp;
+                                pv_temp = ptr->sig->pv;
+                                ptr->sig->pv = ptr->pv;
+                                ptr->pv = pv_temp;
+                                ex_temp = ptr->sig->existencia;
+                                ptr->sig->existencia = ptr->existencia;
+                                ptr->existencia = ex_temp;
+                                nr_temp = ptr->sig->nr;
+                                ptr->sig->nr = ptr->nr;
+                                ptr->nr = nr_temp;
+                                ptr = ptr->sig;
+                            }
+                    while (true) {
+                        cout << setw(5) << ptr->id << setw(12) << ptr->producto << setw(7) << ptr->pc;
+                        cout << setw(6) << ptr->pv << setw(9) << ptr->existencia << setw(11) << ptr->nr;
+                        if (ptr->existencia <= ptr->nr)
+                            cout << "*" << endl;
+                        else
+                            cout << endl;
+                        if (ptr->sig == NULL)
+                            break;
+                        else
+                            ptr = ptr->sig;
+                    }
+                    /*    ptr = inicio;
+                        while (ptr->sig != NULL) {
+                            if (*ptr->id > *ptr->sig->id)
+                                swap(ptr, ptr->sig);
+                            ptr = ptr->sig;
+                        }
+                        cout << setw(6) << "ID" << setw(12) << "Producto" << setw(6) << "PC" << setw(6) << "PV";
+                        cout << setw(14) << "Existencia" << setw(6) << "NR" << endl;
+                        ptr = inicio;
+                        while (true) {
+                            cout << setw(5) << ptr->id << setw(12) << ptr->producto << setw(7) << ptr->pc;
+                            cout << setw(6) << ptr->pv << setw(9) << ptr->existencia << setw(11) << ptr->nr;
+                            if (ptr->existencia <= ptr->nr)
+                                cout << "*" << endl;
+                            else
+                                cout << endl;
+                            if (ptr->sig== NULL)
+                                break;
+                            else
+                                ptr = ptr->sig;
+                        }*/
                 }
                     while (true) {
                         cout << "Presione ''*'' para salir\n";
@@ -625,17 +713,15 @@ void Inventario() {
                     break;
                 case 2:
                 {
-                 /*  ptr = inicio;
-                    aux = inicio;
-                    while (aux != NULL) {
-                        if (aux->producto > aux->sig->producto)
-                            swap(ptr, ptr->sig);
-                        aux = aux->sig;
-                        ptr=ptr->sig;
-
-                    }*/
+                    ptr = inicio;
+                    while (ptr->sig != NULL) {
+                        if (ptr->producto > ptr->sig->producto)
+                            swap(*ptr, *ptr->sig);
+                        ptr = ptr->sig;
+                    }
                     cout << setw(6) << "ID" << setw(12) << "Producto" << setw(6) << "PC" << setw(6) << "PV";
                     cout << setw(14) << "Existencia" << setw(6) << "NR" << endl;
+                    ptr = inicio;
                     while (true) {
                         cout << setw(5) << ptr->id << setw(12) << ptr->producto << setw(7) << ptr->pc;
                         cout << setw(6) << ptr->pv << setw(9) << ptr->existencia << setw(11) << ptr->nr;
@@ -663,7 +749,266 @@ void Inventario() {
 }
 
 void Usuarios() {
+    int opc;
+    do {
+        cout << "Administrador de Usuarios\n";
+        cout << "1. Alta de Usuarios\n";
+        cout << "2. Baja de Usuarios\n";
+        cout << "3. Consulta de Usuarios\n";
+        cout << "4. Modificación de Usuarios\n";
+        cout << "5. Mostrar Usuarios\n";
+        cout << "6. Regresar\n";
+        cout << "Opción: ";
+        cin>>opc;
+        cout << endl;
+        switch (opc) {
+            case 1: Altas_u();
+                break;
+            case 2: Bajas_u();
+                break;
+            case 3: Consultas_u();
+                break;
+            case 4: Modificaciones_u();
+                break;
+            case 5: Mostrar_u();
+                break;
+            case 6:
+                break;
+            default: cout << "Opción Inválida\n";
+        }
+    } while (opc != 6);
+}
 
+void Altas_u() {
+    string aux, tipo_temp;
+    int pass1, pass2;
+    int pos;
+    int opc;
+    cout << "Alta de Usuarios\n";
+    while (true) {
+        cout << "Ingrese Usuario: ";
+        cin >> aux;
+        if (aux == "*")
+            break;
+        pos = buscar_u(aux);
+        if (pos == -1) {
+            do {
+                cout << "Ingrese contraseña del usuario " << aux << ": ";
+                cin>>pass1;
+                cout << "Confirme la contraseña: ";
+                cin>>pass2;
+                if (pass1 == pass2)
+                    break;
+                else
+                    cout << "Las contraseñas no coinciden, intente de nuevo\n";
+            } while (pass1 != pass2);
+            do {
+                cout << "Seleccione Tipo de Usuario: \n";
+                cout << "1. Administrador\n";
+                cout << "2. Vendedor\n";
+                cout << "Opción: ";
+                cin>>opc;
+                switch (opc) {
+                    case 1: tipo_temp = "Administrador";
+                        break;
+                    case 2: tipo_temp = "Vendedor";
+                        break;
+                    default: cout << "Opción Inválida\n";
+                }
+            } while (opc > 2);
+            nuevo_u = new(user);
+            strcpy(nuevo_u->usuario, aux.c_str());
+            nuevo_u->pass = pass2;
+            strcpy(nuevo_u->tipo, tipo_temp.c_str());
+            total_u += 1;
+            if (inicio_u == NULL) {
+                inicio_u = nuevo_u;
+                fin_u = nuevo_u;
+                fin_u->sig = NULL;
+                fin_u->ant = NULL;
+            } else {
+                nuevo_u->ant = fin_u;
+                fin_u->sig = nuevo_u;
+            }
+            fin_u = nuevo_u;
+            fin_u->sig = NULL;
+            cout << "*El usuario ha sido dado de alta exitosamente*\n" << endl;
+        } else
+            cout << "El usuario " << aux << " ya está dado de alta\n" << endl;
+    }
+}
+
+void Bajas_u() {
+    int i;
+    int pos;
+    int opc;
+    string aux;
+    cout << "Baja de Usuarios\n";
+    while (true) {
+        cout << "Ingrese usuario: ";
+        cin>>aux;
+        if (aux == "*")
+            break;
+        pos = buscar_u(aux);
+        cout << pos << endl;
+        cout << "total: " << total_u << endl;
+        if (pos == -1)
+            cout << "El usuario: " << aux << ", no existe\n";
+        else {
+            while (true) {
+                cout << "¿Seguro que desea dar de baja el usuario: " << aux << "?\n";
+                cout << "1. Sí\n";
+                cout << "2. No\n";
+                cin >> opc;
+                switch (opc) {
+                    case 1:
+                    {
+                        total_u -= 1;
+                        ptr_u = inicio_u;
+                        i = 0;
+                        while (i != pos) {
+                            ptr_u = ptr_u->sig;
+                            i++;
+                        }
+                        if (inicio_u == fin_u) { //Si solo hay un nodo en la lista
+                            delete(inicio_u);
+                            inicio_u == NULL;
+                            fin_u == NULL;
+                            ptr_u == NULL;
+                            nuevo_u == NULL;
+                        } else {
+                            if (ptr_u == inicio_u) { //Hay varios nodos, solo el 1° se borra
+                                delete(inicio_u);
+                                inicio_u = inicio_u->sig;
+                                inicio_u->ant = NULL;
+                            } else {
+                                if (ptr_u == fin_u) { //Hay varios nodos, solo el último se borra
+                                    delete(fin_u);
+                                    fin_u = fin_u->ant;
+                                    fin_u->sig = NULL;
+                                } else { //Varios nodos, borrar X elemento de la lista
+                                    delete(ptr_u);
+                                    ptr_u->ant->sig = ptr_u->sig;
+                                    ptr_u->sig->ant = ptr_u->ant;
+                                }
+                            }
+
+                        }
+                        cout << "*El usuario ha sido dado de baja exitosamente*\n" << endl;
+                    }
+                        break;
+                    case 2:
+                        break;
+                    default: cout << "Opción Inválida\n";
+                }
+                if (opc < 3)
+                    break;
+            }
+        }
+    }
+}
+
+void Consultas_u() {
+    string aux, tipo_temp;
+    int pass1, pass2;
+    int i;
+    int pos;
+    int opc;
+    cout << "Consultas de Usuarios\n";
+    while (true) {
+        cout << "Ingrese usuario: ";
+        cin>>aux;
+        if (aux == "*")
+            break;
+        pos = buscar_u(aux);
+        if (pos == -1) {
+            while (true) {
+                cout << "El usuario " << aux << " no existe. ¿Desea darlo de Alta?\n";
+                cout << "1. Sí\n" << "2. No\n";
+                cin >> opc;
+                switch (opc) {
+                    case 1:
+                    {
+                        do {
+                            cout << "Ingrese contraseña del usuario " << aux << ": ";
+                            cin>>pass1;
+                            cout << "Confirme la contraseña: ";
+                            cin>>pass2;
+                            if (pass1 == pass2)
+                                break;
+                            else
+                                cout << "Las contraseñas no coinciden, intente de nuevo\n";
+                        } while (pass1 != pass2);
+                        do {
+                            cout << "Seleccione Tipo de Usuario: \n";
+                            cout << "1. Administrador\n";
+                            cout << "2. Vendedor\n";
+                            cout << "Opción: ";
+                            cin>>opc;
+                            switch (opc) {
+                                case 1: tipo_temp = "Administrador";
+                                    break;
+                                case 2: tipo_temp = "Vendedor";
+                                    break;
+                                default: cout << "Opción Inválida\n";
+                            }
+                        } while (opc > 2);
+                        nuevo_u = new(user);
+                        strcpy(nuevo_u->usuario, aux.c_str());
+                        nuevo_u->pass = pass2;
+                        strcpy(nuevo_u->tipo, tipo_temp.c_str());
+                        total_u += 1;
+                        if (inicio_u == NULL) {
+                            inicio_u = nuevo_u;
+                            fin_u = nuevo_u;
+                            fin_u->sig = NULL;
+                            fin_u->ant = NULL;
+                        } else {
+                            nuevo_u->ant = fin_u;
+                            fin_u->sig = nuevo_u;
+                        }
+                        fin_u = nuevo_u;
+                        fin_u->sig = NULL;
+                        cout << "*El usuario ha sido dado de alta exitosamente*\n" << endl;
+                    }
+                        break;
+                    case 2:
+                        break;
+                    default: cout << "Opción Inválida\n";
+                }
+                if (opc < 3)
+                    break;
+            }
+        } else {
+  
+            cout << "Resultados del usuario: " << ptr_u->usuario << endl;
+            cout << endl;
+            cout << setw(10) << "Usuario" << setw(7) << "Pass" << setw(15) << "Tipo" << endl;
+            ptr_u = inicio_u;
+            cout << setw(10) << ptr_u->usuario << setw(6) << ptr_u->pass << setw(18) << ptr_u->tipo << endl;
+        }
+    }
+}
+
+void Modificaciones_u() {
+
+}
+
+void Mostrar_u() {
+    string salir;
+    cout << "Usuarios\n";
+    cout << setw(10) << "Usuario" << setw(7) << "Pass" << setw(15) << "Tipo" << endl;
+    ptr_u = inicio_u;
+    while (ptr_u != NULL) {
+        cout << setw(10) << ptr_u->usuario << setw(6) << ptr_u->pass << setw(18) << ptr_u->tipo << endl;
+        ptr_u = ptr_u->sig;
+    }
+    while (true) {
+        cout << "Presione ''*'' para salir\n";
+        cin>>salir;
+        if (salir == "*")
+            break;
+    }
 }
 
 void Ventas() {
