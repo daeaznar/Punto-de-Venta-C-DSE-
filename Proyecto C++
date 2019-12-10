@@ -38,6 +38,10 @@ user *ptr_u = NULL;
 user *inicio_u = NULL;
 user *fin_u = NULL;
 
+struct vender{
+
+};
+
 int buscar(string name);
 
 void Lectura_prod();
@@ -645,7 +649,7 @@ void Inventario() {
             switch (opc) {
                 case 1:
                 {
-                    k = total;
+                    /*k = total;
                     ptr = inicio;
                     for (i = 0; i < k - 1; i++)
                         for (j = 0; j < (k - 1) - i; j++)
@@ -669,7 +673,8 @@ void Inventario() {
                                 ptr->sig->nr = ptr->nr;
                                 ptr->nr = nr_temp;
                                 ptr = ptr->sig;
-                            }
+                            }*/
+                    ptr = inicio;
                     while (true) {
                         cout << setw(5) << ptr->id << setw(12) << ptr->producto << setw(7) << ptr->pc;
                         cout << setw(6) << ptr->pv << setw(9) << ptr->existencia << setw(11) << ptr->nr;
@@ -714,11 +719,11 @@ void Inventario() {
                 case 2:
                 {
                     ptr = inicio;
-                    while (ptr->sig != NULL) {
+                    /*while (ptr->sig != NULL) {
                         if (ptr->producto > ptr->sig->producto)
                             swap(*ptr, *ptr->sig);
                         ptr = ptr->sig;
-                    }
+                    }*/
                     cout << setw(6) << "ID" << setw(12) << "Producto" << setw(6) << "PC" << setw(6) << "PV";
                     cout << setw(14) << "Existencia" << setw(6) << "NR" << endl;
                     ptr = inicio;
@@ -843,6 +848,7 @@ void Bajas_u() {
     int pos;
     int opc;
     string aux;
+    string tipo_temp;
     cout << "Baja de Usuarios\n";
     while (true) {
         cout << "Ingrese usuario: ";
@@ -871,25 +877,30 @@ void Bajas_u() {
                             i++;
                         }
                         if (inicio_u == fin_u) { //Si solo hay un nodo en la lista
-                            delete(inicio_u);
-                            inicio_u == NULL;
-                            fin_u == NULL;
-                            ptr_u == NULL;
-                            nuevo_u == NULL;
+                            tipo_temp = ptr_u->tipo;
+                            if (tipo_temp == "Administrador")
+                                cout << "***No se puede eliminar, debe haber al menos 1 usuario Administrador***\n" << endl;
+                            else {
+                                delete(inicio_u);
+                                inicio_u == NULL;
+                                fin_u == NULL;
+                                ptr_u == NULL;
+                                nuevo_u == NULL;
+                            }
                         } else {
                             if (ptr_u == inicio_u) { //Hay varios nodos, solo el 1° se borra
-                                delete(inicio_u);
                                 inicio_u = inicio_u->sig;
                                 inicio_u->ant = NULL;
+                                delete(ptr_u);
                             } else {
                                 if (ptr_u == fin_u) { //Hay varios nodos, solo el último se borra
                                     delete(fin_u);
                                     fin_u = fin_u->ant;
                                     fin_u->sig = NULL;
                                 } else { //Varios nodos, borrar X elemento de la lista
-                                    delete(ptr_u);
                                     ptr_u->ant->sig = ptr_u->sig;
                                     ptr_u->sig->ant = ptr_u->ant;
+                                    delete(ptr_u);
                                 }
                             }
 
@@ -980,18 +991,126 @@ void Consultas_u() {
                     break;
             }
         } else {
-  
+
             cout << "Resultados del usuario: " << ptr_u->usuario << endl;
             cout << endl;
             cout << setw(10) << "Usuario" << setw(7) << "Pass" << setw(15) << "Tipo" << endl;
-            ptr_u = inicio_u;
             cout << setw(10) << ptr_u->usuario << setw(6) << ptr_u->pass << setw(18) << ptr_u->tipo << endl;
+            cout << endl;
         }
     }
 }
 
 void Modificaciones_u() {
-
+    int opc;
+    int pos;
+    int pass1, pass2;
+    int i;
+    string aux;
+    string tipo_temp;
+    cout << "Modificación de Usuarios\n";
+    while (true) {
+        cout << "Ingrese Usuario a Modificar: ";
+        cin>>aux;
+        if (aux == "*")
+            break;
+        pos = buscar_u(aux);
+        if (pos == -1)
+            cout << "El usuario: " << aux << ", no existe\n";
+        else {
+            while (true) {
+                cout << ptr_u->usuario << endl;
+                cout << "Qué desea Modificar?\n";
+                cout << "1. Contraseña\n";
+                cout << "2. Tipo de Usuario\n";
+                cout << "3. TODO\n";
+                cout << "4. Regresar\n";
+                cin>>opc;
+                switch (opc) {
+                    case 1:
+                    {
+                        cout << "La contraseña actual es: " << ptr_u->pass << endl;
+                        do {
+                            cout << "Ingrese la nueva contraseña: ";
+                            cin>>pass1;
+                            cout << "Confirme la contraseña: ";
+                            cin>>pass2;
+                            if (pass1 == pass2)
+                                break;
+                            else
+                                cout << "Las contraseñas no coinciden, intente de nuevo\n";
+                        } while (pass1 != pass2);
+                        ptr_u->pass = pass2;
+                        cout << "La contraseña ha sido cambiada\n" << endl;
+                    }
+                        break;
+                    case 2:
+                        tipo_temp = ptr_u->tipo;
+                    {
+                        if (tipo_temp == "Administrador") {
+                            cout << "El usuario es de tipo: " << ptr_u->tipo << endl;
+                            tipo_temp = "Vendedor";
+                            strcpy(ptr_u->tipo, tipo_temp.c_str());
+                            cout << "Se cambiará a tipo: " << ptr_u->tipo << endl;
+                        } else {
+                            cout << "El usuario es de tipo: " << ptr_u->tipo << endl;
+                            tipo_temp = "Administrador";
+                            strcpy(ptr_u->tipo, tipo_temp.c_str());
+                            cout << "Se cambiará a tipo: " << ptr_u->tipo << endl;
+                        }
+                        cout << "El tipo de usuario ha sido modificado\n" << endl;
+                    }
+                        break;
+                    case 3:
+                        tipo_temp = ptr_u->tipo;
+                    {
+                        cout << "La contraseña actual es: " << ptr_u->pass << endl;
+                        do {
+                            cout << "Ingrese la nueva contraseña: ";
+                            cin>>pass1;
+                            cout << "Confirme la contraseña: ";
+                            cin>>pass2;
+                            if (pass1 == pass2)
+                                break;
+                            else
+                                cout << "Las contraseñas no coinciden, intente de nuevo\n";
+                        } while (pass1 != pass2);
+                        ptr_u->pass = pass2;
+                        cout << "La contraseña ha sido cambiada\n";
+                        do {
+                            cout << "Seleccione Tipo de Usuario: \n";
+                            cout << "1. Administrador\n";
+                            cout << "2. Vendedor\n";
+                            cout << "Opción: ";
+                            cin>>opc;
+                            switch (opc) {
+                                case 1:
+                                {
+                                    tipo_temp = "Administrador";
+                                    strcpy(ptr_u->tipo, tipo_temp.c_str());
+                                }
+                                    break;
+                                case 2:
+                                {
+                                    tipo_temp = "Vendedor";
+                                    strcpy(ptr_u->tipo, tipo_temp.c_str());
+                                }
+                                    break;
+                                default: cout << "Opción Inválida\n";
+                            }
+                        } while (opc > 2);
+                    }
+                        break;
+                    case 4:
+                        break;
+                    default: cout << "Opción Inválida\n";
+                }
+                if (opc == 4)
+                    break;
+            }
+            break;
+        }
+    }
 }
 
 void Mostrar_u() {
@@ -1012,6 +1131,13 @@ void Mostrar_u() {
 }
 
 void Ventas() {
+    string cliente;
     cout << endl;
     cout << "Menú Ventas\n";
+    while(true){
+        cout<<"Ingrese nombre del cliente: ";
+        cin>>cliente;
+        if(cliente=="*")
+            break;
+    }
 }
