@@ -29,6 +29,8 @@ struct user {
     char usuario[40];
     double pass;
     char tipo[40];
+    int total_v;
+    int subtotal_v;
     user *ant;
     user *sig;
 };
@@ -38,9 +40,12 @@ user *ptr_u = NULL;
 user *inicio_u = NULL;
 user *fin_u = NULL;
 
-struct vender{
-
+struct vender {
+    string comprador;
+    int subtotal_c;
+    int total_c;
 };
+vender cliente[50];
 
 int buscar(string name);
 
@@ -1131,13 +1136,71 @@ void Mostrar_u() {
 }
 
 void Ventas() {
-    string cliente;
+    string prod;
+    string cliente_t;
+    int pos, opc;
+    int cant;
+    int i;
+    int j = 0;
     cout << endl;
     cout << "Menú Ventas\n";
-    while(true){
-        cout<<"Ingrese nombre del cliente: ";
-        cin>>cliente;
-        if(cliente=="*")
+    while (true) {
+        cout << "Ingrese nombre del cliente: ";
+        cin>>cliente_t;
+        if (cliente_t == "*")
             break;
-    }
+        while (true) {
+            cliente[j].total_c = 0;
+            cout << "Ingrese producto a vender: ";
+            cin>>prod;
+            if (prod == "*")
+                break;
+            pos = buscar(prod);
+            if (pos == -1)
+                cout << "El producto " << prod << " no existe\n";
+            else
+                if (ptr->existencia < 1)
+                cout << "No hay existencia disponible de este producto\n";
+            else {
+                cout << "Ingrese cantidad a vender: ";
+                cin>>cant;
+                if (cant > ptr->existencia) {
+                    do {
+                        cout << "No hay " << cant << " piezas disponibles, únicamente hay " << ptr->existencia << ". ¿Desea realizar venta?\n";
+                        cout << "1. Sí\n";
+                        cout << "2. No\n";
+                        cin>>opc;
+                        switch (opc) {
+                            case 1:
+                            {
+                                cliente[j].subtotal_c = ptr->existencia * ptr->pv;
+                                ptr->existencia = 0;
+                                cliente[j].total_c = cliente[j].total_c + cliente[j].subtotal_c;
+                            }
+                                break;
+                            case 2:
+                                break;
+                            default:
+                                cout << "Opción Inválida\n";
+                        }
+                    } while (opc > 2);
+                } else {
+                    cliente[j].subtotal_c = cant * ptr->pv;
+                    ptr->existencia = ptr->existencia - cant;
+                    cliente[j].total_c = cliente[j].total_c + cliente[j].subtotal_c;
+                }
+                cout<<cliente[j].total_c;
+            }
+        }
+        ptr_u->subtotal_v=ptr_u->subtotal_v+cliente[j].total_c;
+    } 
+    ptr_u->total_v= ptr_u->total_v+ptr_u->subtotal_v;
+    cout << endl;
+    cout << "Vendedor: " << ptr_u->usuario << endl;
+    cout << "Producto" << setw(10) << "Cantidad" << setw(16) << "Precio Unitario" << setw(10) << "Subtotal\n";
+    for (i = 0; i < total; i++)
+        if (st[i] == 1 && cantidad[i] > 0)
+            cout << setw(8) << producto[i] << setw(10) << cantidad[i] << setw(16) << pv[i] << setw(10) << subtotal_2[i] << endl;
+    cout << setw(41) << "Total: $" << total_vendedor[i_bv] << endl;
 }
+
