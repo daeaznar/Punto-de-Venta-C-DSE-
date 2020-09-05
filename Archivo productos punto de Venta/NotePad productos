@@ -1,0 +1,42 @@
+	#include <iostream>
+#include <fstream>
+#include <cstring>
+
+using namespace std;
+
+int main() {
+    fstream inventario("productos.bin", ios::out | ios::binary);
+    string producto;
+    int id, pc, pv, existencia, nr, st;
+    if (!inventario) cout << "Error en la apertura del archivo\n";
+    else {
+        do {
+            cout << "Producto (* para salir): ";
+            cin >>producto;
+            if (producto != "*"){
+                fflush(stdin);
+                cout << "ID: ";
+                cin >> id;
+                cout << "PC: ";
+                cin>>pc;
+                cout << "PV: ";
+                cin>>pv;
+                cout << "Existencia: ";
+                cin>>existencia;
+                cout << "NR: ";
+                cin>>nr;
+                st = 1;
+                cout << producto << " " << id << " " << pc << " " << pv << " " << existencia << " " << nr << " " << st << endl;
+                //convertir string a char
+                inventario.write(reinterpret_cast<char *> (&producto), sizeof (producto));
+                inventario.write(reinterpret_cast<char *> (&id), sizeof (id));
+                inventario.write(reinterpret_cast<char *> (&pc), sizeof (pc));
+                inventario.write(reinterpret_cast<char *> (&pv), sizeof (pv));
+                inventario.write(reinterpret_cast<char *> (&existencia), sizeof (existencia));
+                inventario.write(reinterpret_cast<char *> (&nr), sizeof (nr));
+                inventario.write(reinterpret_cast<char *> (&st), sizeof (st));
+            }
+        } while (producto != "*");
+    }
+    inventario.close();
+}

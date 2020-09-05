@@ -667,21 +667,29 @@ void Inventario() {
                                 id_temp = ptr->sig->id;
                                 ptr->sig->id = ptr->id;
                                 ptr->id = id_temp;
+                     * 
                                 prod_temp = ptr->sig->producto;
                                 strcpy(ptr->sig->producto, ptr->producto);
                                 strcpy(ptr->producto, prod_temp.c_str());
+                     * 
                                 pc_temp = ptr->sig->pc;
                                 ptr->sig->pc = ptr->pc;
                                 ptr->pc = pc_temp;
+                     * 
                                 pv_temp = ptr->sig->pv;
                                 ptr->sig->pv = ptr->pv;
                                 ptr->pv = pv_temp;
+                     * 
                                 ex_temp = ptr->sig->existencia;
                                 ptr->sig->existencia = ptr->existencia;
                                 ptr->existencia = ex_temp;
+                     * 
                                 nr_temp = ptr->sig->nr;
                                 ptr->sig->nr = ptr->nr;
                                 ptr->nr = nr_temp;
+                     * 
+                     * 
+                     * 
                                 ptr = ptr->sig;
                             }*/
                     ptr = inicio;
@@ -1262,7 +1270,7 @@ void Corte_caja() {
 void Escritura_prods() {
     char prod[40];
     int id_t, pc_t, pv_t, existencia_t, nr_t;
-    fstream archivo("prods.bin", ios::out | ios::binary);
+    fstream archivo("productos.bin", ios::out | ios::binary);
     ptr = inicio;
     do {
         strcpy(prod, ptr->producto);
@@ -1286,7 +1294,7 @@ void Escritura_users() {
     char user_t[40];
     char tipo_t[40];
     double pass_t;
-    fstream archivo("users.bin", ios::out | ios::binary);
+    fstream archivo("usuarios.bin", ios::out | ios::binary);
     ptr_u = inicio_u;
     do {
         strcpy(user_t, ptr_u->usuario);
